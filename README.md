@@ -8,9 +8,9 @@ repositories {
   ...
   maven { url 'https://jitpack.io' }
 }
+```
 
-
-
+```
 dependencies {
     implementation 'com.github.Hippah:RLE:1.0.0'
     implementation 'redis.clients:jedis:3.2.0'
