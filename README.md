@@ -12,12 +12,12 @@ repositories {
 
 ```
 dependencies {
-    implementation 'com.github.Hippah:RLE:1.0.0'
+    implementation 'com.github.Hippo:RLE:1.0.0'
     implementation 'redis.clients:jedis:3.2.0'
     implementation 'com.google.code.gson:gson:2.8.6'
 
     //These are required for LWJEB
-    implementation 'com.github.Hippah:LWJEB:5.1.2'
+    implementation 'com.github.Hippo:LWJEB:5.1.2'
     implementation 'org.ow2.asm:asm:7.1'
     implementation 'org.ow2.asm:asm-tree:7.1'
 }
