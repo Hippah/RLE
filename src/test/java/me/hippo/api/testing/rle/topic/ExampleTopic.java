@@ -4,7 +4,7 @@ import java.io.Serializable;
 
 /**
  * @author Hippo
- * @version 1.0.0, 4/21/20
+ * @version 1.0.1, 4/21/20
  * @since 1.0.0
  */
 public final class ExampleTopic implements Serializable {

@@ -1,10 +1,11 @@
-package me.hippo.api.lwjeb.extensions.rle;
+package rip.hippo.lwjeb.extensions.rle;
 
 
 import com.google.gson.Gson;
-import me.hippo.api.lwjeb.bus.AbstractAsynchronousPubSubMessageBus;
-import me.hippo.api.lwjeb.configuration.config.impl.ExceptionHandlingConfiguration;
-import me.hippo.api.lwjeb.extensions.rle.util.SerializationUtil;
+import rip.hippo.lwjeb.bus.AbstractAsynchronousPubSubMessageBus;
+import rip.hippo.lwjeb.configuration.config.impl.BusConfiguration;
+import rip.hippo.lwjeb.configuration.config.impl.ExceptionHandlingConfiguration;
+import rip.hippo.lwjeb.extensions.rle.util.SerializationUtil;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.JedisPubSub;
@@ -16,7 +17,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * @author Hippo
- * @version 1.0.0, 4/21/20
+ * @version 1.0.1, 4/21/20
  * @since 1.0.0
  *
  * A <tt>Redis Pub Sub</tt> is an implementation around {@link JedisPubSub}.
@@ -121,7 +122,7 @@ public final class RedisPubSub extends JedisPubSub {
                 jedis.subscribe(this, channel);
                 jedis.close();
             }
-        }, parentBus.getIdentifier() + " - Redis Channel (" + channel + ")");
+        }, parentBus.getConfigurations().get(BusConfiguration.class).getIdentifier() + " - Redis Channel (" + channel + ")");
         thread.start();
         jedisChannelThreads.add(thread);
     }

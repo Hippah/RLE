@@ -1,17 +1,14 @@
 package me.hippo.api.testing.rle;
 
-import me.hippo.api.lwjeb.annotation.Handler;
-import me.hippo.api.lwjeb.bus.PubSub;
-import me.hippo.api.lwjeb.extensions.rle.RedisPubSub;
+import rip.hippo.lwjeb.bus.PubSub;
+import rip.hippo.lwjeb.extensions.rle.RedisPubSub;
 import me.hippo.api.testing.rle.topic.ExampleTopic;
 import redis.clients.jedis.JedisPool;
-
-import java.io.Serializable;
 
 
 /**
  * @author Hippo
- * @version 1.0.0, 4/21/20
+ * @version 1.0.1, 4/21/20
  * @since 1.0.0
  */
 public enum PublisherExample {

@@ -1,4 +1,4 @@
-package me.hippo.api.lwjeb.extensions.rle.util;
+package rip.hippo.lwjeb.extensions.rle.util;
 
 import com.google.gson.Gson;
 
@@ -7,7 +7,7 @@ import java.io.Serializable;
 /**
  * @author Hippo
  * @version 1.0.0, 4/21/20
- * @since 1.0.0
+ * @since 1.0.1
  *
  * The <tt>Serialization Util</tt> helps with serialization. (duh)
  */
