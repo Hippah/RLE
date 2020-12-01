@@ -1,6 +1,12 @@
+# Gradle
 .gradle/
-.idea/
-build
-.git
-gradle/
+build/
+
+# IDEA
+.idea
+
+#OSX
 .DS_Store
+
+# Git
+.git/
