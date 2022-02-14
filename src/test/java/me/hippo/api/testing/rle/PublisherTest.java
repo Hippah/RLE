@@ -1,6 +1,7 @@
 package me.hippo.api.testing.rle;
 
 import me.hippo.api.testing.rle.topic.ExampleTopic;
+import org.junit.jupiter.api.Test;
 import redis.clients.jedis.JedisPool;
 import rip.hippo.lwjeb.bus.PubSub;
 import rip.hippo.lwjeb.extensions.rle.RedisPubSub;
@@ -11,10 +12,10 @@ import rip.hippo.lwjeb.extensions.rle.RedisPubSub;
  * @version 1.0.1, 4/21/20
  * @since 1.0.0
  */
-public enum PublisherExample {
-  ;
+public final class PublisherTest {
 
-  public static void main(String[] args) {
+  @Test
+  public void testPublish() {
     try {
       JedisPool jedisPool = new JedisPool("localhost");
 

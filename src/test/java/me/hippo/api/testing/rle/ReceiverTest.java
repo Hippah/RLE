@@ -1,6 +1,7 @@
 package me.hippo.api.testing.rle;
 
 import me.hippo.api.testing.rle.topic.ExampleTopic;
+import org.junit.jupiter.api.Test;
 import redis.clients.jedis.JedisPool;
 import rip.hippo.lwjeb.annotation.Handler;
 import rip.hippo.lwjeb.bus.PubSub;
@@ -14,16 +15,16 @@ import java.io.Serializable;
  * @version 1.0.1, 4/21/20
  * @since 1.0.0
  */
-public enum ReceiverExample {
-  INSTANCE;
+public final class ReceiverTest {
 
-  public static void main(String[] args) {
+  @Test
+  public void testReceive() {
     try {
       JedisPool jedisPool = new JedisPool("localhost");
 
       PubSub<Serializable> pubSub = new PubSub<>();
       pubSub.setupDispatchers();
-      pubSub.subscribe(INSTANCE);
+      pubSub.subscribe(this);
 
       RedisPubSub redisPubSub = new RedisPubSub(pubSub);
       redisPubSub.subscribeRedisChannel(jedisPool);
