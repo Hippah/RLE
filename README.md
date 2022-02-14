@@ -17,9 +17,7 @@ dependencies {
     implementation 'com.google.code.gson:gson:2.8.6'
 
     //These are required for LWJEB
-    implementation 'com.github.Hippo:LWJEB:5.1.2'
-    implementation 'org.ow2.asm:asm:9.0'
-    implementation 'org.ow2.asm:asm-tree:9.0'
+    implementation 'com.github.Hippo:LWJEB:3.1.0'
 }
 ```
 

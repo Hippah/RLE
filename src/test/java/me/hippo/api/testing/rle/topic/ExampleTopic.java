@@ -9,20 +9,20 @@ import java.io.Serializable;
  */
 public final class ExampleTopic implements Serializable {
 
-    private final int test;
+  private final int test;
 
-    public ExampleTopic(int test) {
-        this.test = test;
-    }
+  public ExampleTopic(int test) {
+    this.test = test;
+  }
 
-    public int getTest() {
-        return test;
-    }
+  public int getTest() {
+    return test;
+  }
 
-    @Override
-    public String toString() {
-        return "ExampleTopic{" +
-                "test=" + test +
-                '}';
-    }
+  @Override
+  public String toString() {
+    return "ExampleTopic{" +
+        "test=" + test +
+        '}';
+  }
 }
