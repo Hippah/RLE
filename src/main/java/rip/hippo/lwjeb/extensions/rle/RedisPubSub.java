@@ -5,11 +5,15 @@ import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.JedisPubSub;
 import rip.hippo.lwjeb.bus.AbstractAsynchronousPubSubMessageBus;
+import rip.hippo.lwjeb.configuration.config.impl.BusConfiguration;
 import rip.hippo.lwjeb.configuration.config.impl.ExceptionHandlingConfiguration;
 import rip.hippo.lwjeb.extensions.rle.message.MessageAdapter;
 import rip.hippo.lwjeb.extensions.rle.message.impl.GsonMessageAdapter;
 
 import java.io.Serializable;
+import java.util.Arrays;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.function.BiConsumer;
 
 /**
@@ -36,6 +40,11 @@ public final class RedisPubSub extends JedisPubSub {
   private final MessageAdapter messageAdapter;
 
   /**
+   * List of subscriber threads
+   */
+  private final List<Thread> subscriberThreads;
+
+  /**
    * Constructs a <tt>Redis Pub Sub</tt> with the desired <tt>parent bus</tt> and <tt>message adapter</tt>.
    *
    * @param parentBus The parent bus.
@@ -44,6 +53,7 @@ public final class RedisPubSub extends JedisPubSub {
   public RedisPubSub(AbstractAsynchronousPubSubMessageBus<Serializable> parentBus, MessageAdapter messageAdapter) {
     this.parentBus = parentBus;
     this.messageAdapter = messageAdapter;
+    this.subscriberThreads = new LinkedList<>();
   }
 
   public RedisPubSub(AbstractAsynchronousPubSubMessageBus<Serializable> parentBus) {
@@ -107,9 +117,15 @@ public final class RedisPubSub extends JedisPubSub {
    * @param channels The channels.
    */
   public void subscribeRedisChannel(JedisPool jedisPool, String... channels) {
-    try (Jedis jedis = jedisPool.getResource()) {
-      jedis.subscribe(this, channels);
-    }
+    Thread thread = new Thread(() -> {
+      try (Jedis jedis = jedisPool.getResource()) {
+        jedis.subscribe(this, channels);
+      }
+    }, parentBus.getConfigurations().get(BusConfiguration.class).getIdentifier()
+        + " - Redis Channels " + Arrays.toString(channels));
+    thread.setDaemon(true);
+    thread.start();
+    subscriberThreads.add(thread);
   }
 
   public void using(JedisPool jedisPool, BiConsumer<RedisPubSub, Jedis> consumer) {
@@ -123,6 +139,9 @@ public final class RedisPubSub extends JedisPubSub {
    */
   public void shutdown() {
     parentBus.shutdown();
+    for (Thread thread : subscriberThreads) {
+      thread.interrupt();
+    }
   }
 
   public AbstractAsynchronousPubSubMessageBus<Serializable> getParentBus() {
