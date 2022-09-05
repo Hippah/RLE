@@ -11,7 +11,7 @@ repositories {
 
 ```
 dependencies {
-    implementation("rip.hippo:RLE:1.1.1")
+    implementation("rip.hippo:RLE:1.2.0")
     implementation("redis.clients:jedis:3.2.0")
     implementation("com.google.code.gson:gson:2.8.6")
 

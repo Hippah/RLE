@@ -1,29 +1,26 @@
 package rip.hippo.lwjeb.extensions.rle;
 
 
-import com.google.gson.Gson;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.JedisPubSub;
 import rip.hippo.lwjeb.bus.AbstractAsynchronousPubSubMessageBus;
-import rip.hippo.lwjeb.configuration.config.impl.BusConfiguration;
 import rip.hippo.lwjeb.configuration.config.impl.ExceptionHandlingConfiguration;
-import rip.hippo.lwjeb.extensions.rle.util.SerializationUtil;
+import rip.hippo.lwjeb.extensions.rle.message.MessageAdapter;
+import rip.hippo.lwjeb.extensions.rle.message.impl.GsonMessageAdapter;
 
 import java.io.Serializable;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.BiConsumer;
 
 /**
  * @author Hippo
- * @version 1.0.1, 4/21/20
- * @since 1.0.0
  * <p>
  * A <tt>Redis Pub Sub</tt> is an implementation around {@link JedisPubSub}.
  * It wraps around and hooks into {@link AbstractAsynchronousPubSubMessageBus} for event publication.
  */
 public final class RedisPubSub extends JedisPubSub {
+
+  private static final String DEFAULT_CHANNEL = "LWJEB";
 
   /**
    * The parent bus.
@@ -34,34 +31,27 @@ public final class RedisPubSub extends JedisPubSub {
   private final AbstractAsynchronousPubSubMessageBus<Serializable> parentBus;
 
   /**
-   * The <tt>threads</tt> that subscribe to a redis channel.
+   * The message adapter.
    */
-  private final List<Thread> jedisChannelThreads;
+  private final MessageAdapter messageAdapter;
 
   /**
-   * If the bus should be shut down.
-   */
-  private final AtomicBoolean shutdown;
-
-  /**
-   * The current {@link Gson} instance for serialization.
-   */
-  private Gson gson;
-
-  /**
-   * Constructs a <tt>Redis Pub Sub</tt> with the desired <tt>parent bus</tt>.
+   * Constructs a <tt>Redis Pub Sub</tt> with the desired <tt>parent bus</tt> and <tt>message adapter</tt>.
    *
    * @param parentBus The parent bus.
+   * @param messageAdapter The message adapter.
    */
-  public RedisPubSub(AbstractAsynchronousPubSubMessageBus<Serializable> parentBus) {
+  public RedisPubSub(AbstractAsynchronousPubSubMessageBus<Serializable> parentBus, MessageAdapter messageAdapter) {
     this.parentBus = parentBus;
-    this.jedisChannelThreads = new LinkedList<>();
-    this.shutdown = new AtomicBoolean(true);
-    this.gson = new Gson();
+    this.messageAdapter = messageAdapter;
+  }
+
+  public RedisPubSub(AbstractAsynchronousPubSubMessageBus<Serializable> parentBus) {
+    this(parentBus, new GsonMessageAdapter());
   }
 
   /**
-   * Whenever a message is received from the the redis pubsub channel
+   * Whenever a message is received from the redis pubsub channel
    * that message will be deserialized into a <tt>topic</tt> and added into the
    * <tt>parent bus</tt>'s result queue.
    *
@@ -71,8 +61,9 @@ public final class RedisPubSub extends JedisPubSub {
   @Override
   public void onMessage(String channel, String message) {
     try {
-      parentBus.addMessage(parentBus.getPublisher().publish(SerializationUtil.deserialize(message, gson), parentBus));
-    } catch (ClassNotFoundException e) {
+      Serializable topic = messageAdapter.toSerializable(message);
+      parentBus.getPublisher().publish(topic, parentBus).dispatch();
+    } catch (Exception e) {
       parentBus.getConfigurations().get(ExceptionHandlingConfiguration.class).getExceptionHandler().handleException(e);
     }
   }
@@ -96,7 +87,7 @@ public final class RedisPubSub extends JedisPubSub {
    */
   public void post(JedisPool jedisPool, String channel, Serializable topic) {
     try (Jedis jedis = jedisPool.getResource()) {
-      jedis.publish(channel, SerializationUtil.serialize(topic, gson));
+      jedis.publish(channel, messageAdapter.toMessage(topic));
     }
   }
 
@@ -106,62 +97,35 @@ public final class RedisPubSub extends JedisPubSub {
    * @param jedisPool The jedis pool.
    */
   public void subscribeRedisChannel(JedisPool jedisPool) {
-    subscribeRedisChannel(jedisPool, "LWJEB");
+    subscribeRedisChannel(jedisPool, DEFAULT_CHANNEL);
   }
 
   /**
-   * Subscribes to the <tt>channel</tt> redis channel.
+   * Subscribes to the <tt>channels</tt> redis channels.
    *
-   * @param jedisPool
-   * @param channel
+   * @param jedisPool The jedis pool.
+   * @param channels The channels.
    */
-  public void subscribeRedisChannel(JedisPool jedisPool, String channel) {
-    Thread thread = new Thread(() -> {
-      while (shutdown.get()) {
-        Jedis jedis = jedisPool.getResource();
-        jedis.subscribe(this, channel);
-        jedis.close();
-      }
-    }, parentBus.getConfigurations().get(BusConfiguration.class).getIdentifier() + " - Redis Channel (" + channel + ")");
-    thread.start();
-    jedisChannelThreads.add(thread);
+  public void subscribeRedisChannel(JedisPool jedisPool, String... channels) {
+    try (Jedis jedis = jedisPool.getResource()) {
+      jedis.subscribe(this, channels);
+    }
+  }
+
+  public void using(JedisPool jedisPool, BiConsumer<RedisPubSub, Jedis> consumer) {
+    try (Jedis jedis = jedisPool.getResource()) {
+      consumer.accept(this, jedis);
+    }
   }
 
   /**
-   * Shuts down this bus and the <tt>parent bus</tt>.
+   * Shuts down the <tt>parent bus</tt>.
    */
   public void shutdown() {
-    shutdown.set(false);
-    for (Thread jedisChannelThread : jedisChannelThreads) {
-      jedisChannelThread.interrupt();
-    }
     parentBus.shutdown();
   }
 
-  /**
-   * Gets the <tt>parent bus</tt>.
-   *
-   * @return The parent bus.
-   */
   public AbstractAsynchronousPubSubMessageBus<Serializable> getParentBus() {
     return parentBus;
-  }
-
-  /**
-   * Gets the gson instance.
-   *
-   * @return The gson.
-   */
-  public Gson getGson() {
-    return gson;
-  }
-
-  /**
-   * Sets the gson instance.
-   *
-   * @param gson The gson.
-   */
-  public void setGson(Gson gson) {
-    this.gson = gson;
   }
 }
