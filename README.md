@@ -13,7 +13,7 @@ repositories {
 dependencies {
     implementation("rip.hippo:RLE:1.2.0")
     implementation("redis.clients:jedis:3.2.0")
-    implementation("com.google.code.gson:gson:2.8.6")
+    implementation("com.google.code.gson:gson:2.9.0")
 
     //LWJEB itself
     implementation("rip.hipo:LWJEB:5.3.0")
