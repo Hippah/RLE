@@ -15,8 +15,8 @@ dependencies {
     implementation("redis.clients:jedis:3.2.0")
     implementation("com.google.code.gson:gson:2.8.6")
 
-    //These are required for LWJEB
-    implementation("rip.hipo:LWJEB:3.1.0")
+    //LWJEB itself
+    implementation("rip.hipo:LWJEB:5.3.0")
 }
 ```
 
